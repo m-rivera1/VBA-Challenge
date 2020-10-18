@@ -1,0 +1,215 @@
+Sub stock_magic()
+
+
+'Iteration loop to cycle through each worksheet
+For Each ws In Worksheets
+
+ 
+   
+  'Create variable to capture worksheet name
+  Dim WorksheetName As String
+
+  'Grabbed the WorksheetName
+   WorksheetName = ws.Name
+   
+   'make ws active (this damn missing piece cost me hours of time)
+   ws.Activate
+  
+  'Set an initial variable for holding the stock ticker
+  Dim Ticker As String
+  
+  'Set variable for holding the annual open price
+  Dim Open_Price As Double
+  
+  'Set variable for holding the annual closing price
+  Dim Close_Price As Double
+
+  ' Set an initial variable for holding total summed volume per ticker
+  Dim Volume_Total As Double
+  
+  'Setup data type for lastrow
+   Dim LastRow As Double
+
+  'Set up variable for i
+   Dim i As Long
+
+   'Track of the location for each stock ticker in the summary table
+   Dim Summary_Table_Row As Integer
+     
+  'Set inital value for Volume_Total
+   Volume_Total = 0
+  
+  
+    
+  'Initial value for summary table row counter
+  Summary_Table_Row = 1
+  
+  ' Set variable for function that will find the last row
+  LastRow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+             
+' Capture inital price at begining of the year originally tried Cells(i,3).value but kept failing to get the value
+  Open_Price = Range("C2").Value
+
+
+ 'Add column headings for summary table
+    ws.Cells(1, 9).Value = "Ticker"
+    ws.Cells(1, 10).Value = "Yearly Change"
+    ws.Cells(1, 11).Value = "Percent Change"
+    ws.Cells(1, 12).Value = "Total Stock Volume"
+
+
+  ' Loop through all stock tickers
+  For i = 2 To LastRow
+  
+
+    ' Check if loop is still iterating through the same stock ticker
+    If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+    
+    'Move the one row down
+    Summary_Table_Row = Summary_Table_Row + 1
+
+
+      ' Set the stock ticker in the summary table
+       ws.Cells(Summary_Table_Row, 9).Value = ws.Cells(i, 1).Value
+
+      'Catch closing price
+      Close_Price = ws.Cells(i, 6).Value
+
+      'Put yearly price difference in summary table
+       ws.Cells(Summary_Table_Row, 10).Value = Close_Price - Open_Price
+
+      ' Add to the Volume Total
+      Volume_Total = Volume_Total + ws.Cells(i, 7).Value
+
+                 
+          ' Conditional loop to color positive change green and negative red
+          If ws.Range("J" & Summary_Table_Row).Value >= 0 Then
+              
+              ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 4
+          
+          Else:
+              ws.Range("J" & Summary_Table_Row).Interior.ColorIndex = 3
+              
+          End If
+
+       If Open_Price <> 0 Then
+            ws.Range("K" & Summary_Table_Row).Value = (Close_Price - Open_Price) / Open_Price
+            ws.Range("K" & Summary_Table_Row).NumberFormat = "0.00%"
+      
+       Else
+            ws.Range("K" & Summary_Table_Row).Value = 0
+       End If
+
+        
+       
+      ' Print the Total Volume summed to the Summary Table
+      ws.Range("L" & Summary_Table_Row).Value = Volume_Total
+
+      'move price from original
+       Open_Price = Cells(i + 1, 3)
+    
+      ' Reset the Volume Total
+      Volume_Total = 0
+
+    ' if the loop found a new stock ticker in the next row after the current row...
+    Else
+
+      ' Add to the Volume Total
+      Volume_Total = Volume_Total + ws.Cells(i, 7).Value
+      
+
+    End If
+
+  Next i
+  
+  '****************************************************************************
+'  Code for Challeng Exercise...this one took way too long to figure out
+
+
+'--------------------------------------------
+'Greatest Percent Increase
+
+'--------------------------------------------
+
+
+
+  Dim rng As Range
+  Dim max_price As Double
+ 
+  
+    
+  Set rng = ActiveSheet.Range("K:K")
+  max_price = Application.WorksheetFunction.Max(rng)
+  
+
+  Dim max_price_row As Long
+  max_price_row = Application.Match(max_price, rng, 0)
+  
+
+
+  'print the three lables
+Cells(1, 16).Value = "Ticker"
+
+Cells(1, 17).Value = "Value"
+
+Cells(2, 15).Value = "Greatest Percent Increase"
+
+'Ticker value
+Cells(2, 16).Value = Cells(max_price_row, 9).Value
+'Greatest increased percentage value
+Cells(2, 17).Value = Format(max_price, "Percent")
+
+  
+
+'********************************************
+' Greatest Decrease
+'--------------------------------------
+
+Cells(3, 15).Value = "Greatest Decrease"
+
+  Dim rng2 As Range
+  Dim min_price As Double
+  
+  
+    
+  Set rng2 = ActiveSheet.Range("K:K")
+  min_price = Application.WorksheetFunction.Min(rng2)
+  
+
+  Dim min_price_row As Long
+  min_price_row = Application.Match(min_price, rng2, 0)
+  
+
+Cells(3, 16).Value = Cells(min_price_row, 9).Value
+Cells(3, 17).Value = Format(min_price, "Percent")
+
+
+'********************************************
+' Greatest Total Volume
+'--------------------------------------
+
+
+Cells(4, 15).Value = "Greatest Total Volume"
+
+  Dim rng3 As Range
+  Dim max_vol As Double
+  
+  
+    
+  Set rng3 = ActiveSheet.Range("L:L")
+  max_vol = Application.WorksheetFunction.Max(rng3)
+  
+
+  Dim max_vol_row As Long
+  max_vol_row = Application.Match(max_vol, rng3, 0)
+  
+
+
+Cells(4, 16).Value = Cells(max_vol_row, 9).Value
+Cells(4, 17).Value = max_vol
+  
+Next ws
+
+
+
+End Sub
